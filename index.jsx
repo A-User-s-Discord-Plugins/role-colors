@@ -90,7 +90,7 @@ export default class Rolecolors extends Plugin {
     patchTU() {
         let settings = this.settings
         patch('rolecolor-tu', TypingUsers.prototype, 'render', function (args, res) {
-            console.log(this, res)
+            if (!settings.get('typingcolor', true)) return res
 
             //stolen from strencher btw, also credits https://github.com/shitcord-plugins/typing-avatars/blob/master/index.jsx
             const typingUsers = Object.keys(this.props.typingUsers || {})
