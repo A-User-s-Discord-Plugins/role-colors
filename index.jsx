@@ -3,13 +3,16 @@ import React from 'react'
 import { Plugin } from '@vizality/entities';
 import { getModule, getModuleByDisplayName } from '@vizality/webpack';
 import { patch, unpatch } from '@vizality/patcher'
+import { Avatar } from '@vizality/components';
 import { findInReactTree } from '@vizality/util/react'
 import UserManager from "./apis/UserManager"
 import ColorManager from "./apis/ColorManager"
 
 const { getGuildId } = getModule('getGuildId')
 const { getChannel } = getModule('getChannel');
+const { getUserAvatarURL } = getModule('getUserAvatarURL');
 const UserStore = getModule('getUser', 'getUsers');
+const { getCurrentUser } = getModule('getCurrentUser');
 
 const MessageContent = getModule(m => m.type?.displayName === 'MessageContent');
 const UserMention = getModule(m => m.default?.displayName === 'UserMention');
@@ -63,7 +66,6 @@ export default class Rolecolors extends Plugin {
 
             text.props.className += " rolecolors-vc"
             text.props.style = {color}
-            console.log(text)
             return res
         });
     }
@@ -72,15 +74,27 @@ export default class Rolecolors extends Plugin {
         let settings = this.settings
         patch('rolecolor-mentions', UserMention, 'default', function (args, res) {
             if (!settings.get('mentioncolor', true)) return res
+
             const channel = getChannel(args[0].channelId);
-            let color = UserManager.getRoleColor(channel.guild_id, args[0].userId)
+            const user = UserStore.getUser(args[0].userId)
+
+            let color = UserManager.getRoleColor(channel.guild_id, user.id)
             if (!color) return res
 
             res.props.children.props.className += " rolecolors-mention"
             res.props.children.props.style = {
                 "--color": color,
                 "--colorBg": `${color}1a`,
-                "--colorBgHover": ColorManager.shadeColor(color, -20) // i like readable mentions lmao
+                "--colorBgHover": ColorManager.shadeColor(color, settings.get('mentioncolor-hover-adjustment', -20)) // i like readable mentions lmao
+            }
+
+            if (settings.get('mentioncolor-icons', false) && !(settings.get('mentioncolor-ignore-yourself', true) && getCurrentUser().id === user.id)) {
+                const text = settings.get('mentioncolor-@', true) ? res.props.children.props.children.substr(1) : res.props.children.props.children
+
+                res.props.children.props.children = <div className="rolecolors-mention-avatars">
+                    <Avatar src={getUserAvatarURL(user)} size={Avatar.Sizes.SIZE_16} />
+                    {text}
+                </div>
             }
 
             return res
