@@ -1,7 +1,8 @@
 {
-  "name": "Role colors",
-  "version": "0.0.A",
+  "name": "Role Colors",
+  "version": "1.0.A",
   "description": "Colors Discord according to user's role",
   "author": "A user",
-  "icon": "assets/Icon.png"
+  "icon": "assets/Icon.png",
+  "license": "MIT"
 }
