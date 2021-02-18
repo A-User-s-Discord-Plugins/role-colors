@@ -8,7 +8,9 @@ import { findInReactTree } from '@vizality/util/react'
 import UserManager from "./apis/UserManager"
 import ColorManager from "./apis/ColorManager"
 
-const { getGuildId } = getModule('getGuildId')
+const { getGuildId } = getModule('getGuildId');
+const { getGuild } = getModule('getGuild', 'getGuilds')
+const { membersGroup } = getModule('membersGroup');
 const { getChannel } = getModule('getChannel');
 const { getUserAvatarURL } = getModule('getUserAvatarURL');
 const UserStore = getModule('getUser', 'getUsers');
@@ -17,6 +19,7 @@ const { getCurrentUser } = getModule('getCurrentUser');
 const MessageContent = getModule(m => m.type?.displayName === 'MessageContent');
 const UserMention = getModule(m => m.default?.displayName === 'UserMention');
 const VoiceUser = getModuleByDisplayName('VoiceUser');
+const ListSectionItem = getModule(m => m.default?.displayName === 'ListSectionItem');
 const TypingUsers = getModuleByDisplayName('FluxContainer(TypingUsers)').prototype.render.call({ memoizedGetStateFromStores: () => ({}) }).type;
 
 export default class Rolecolors extends Plugin {
@@ -26,6 +29,7 @@ export default class Rolecolors extends Plugin {
         this.patchVC()
         this.patchTU()
         this.patchMentions()
+        this.patchLSI()
     }
 
     stop(){
@@ -33,6 +37,7 @@ export default class Rolecolors extends Plugin {
         unpatch('rolecolor-vc')
         unpatch('rolecolor-mentions')
         unpatch('rolecolor-tu')
+        unpatch('rolecolor-lsi')
     }
 
     patchMC(){
@@ -47,7 +52,10 @@ export default class Rolecolors extends Plugin {
             if (!originalColor) return res
 
             let color = ColorManager.shadeColor(originalColor, settings.get('messagecolor-color-adjustment', -30))
-            res.props.style = {color}
+            res.props.style = {
+                ...res.props.style, // Don't overiide previous styles
+                color
+            }
 
             return res
         });
@@ -65,7 +73,10 @@ export default class Rolecolors extends Plugin {
             const text = res.props.children.props.children[2]
 
             text.props.className += " rolecolors-vc"
-            text.props.style = {color}
+            text.props.style = {
+                ...res.props.style, // Don't overiide previous styles
+                color
+            }
             return res
         });
     }
@@ -83,6 +94,7 @@ export default class Rolecolors extends Plugin {
 
             res.props.children.props.className += " rolecolors-mention"
             res.props.children.props.style = {
+                ...res.props.style, // Don't overiide previous styles
                 "--color": color,
                 "--colorBg": `${color}1a`,
                 "--colorBgHover": ColorManager.shadeColor(color, settings.get('mentioncolor-hover-adjustment', -20)) // i like readable mentions lmao
@@ -124,6 +136,42 @@ export default class Rolecolors extends Plugin {
             }
 
             return res
+        });
+    }
+
+    patchLSI() {
+        let settings = this.settings
+        patch('rolecolor-lsi', ListSectionItem, 'default', function(args, res) {
+            if (!settings.get('membergroupcolor', true)) return res
+
+            console.log(args, res)
+
+            const name = args[0].children.props.children[0]
+            const length = args[0].children.props.children[2]
+
+            //thanks dperolio
+            if (!res.props?.children?.props?.children || !res.props?.className?.includes("membersGroup-v9BXpm")) return res;
+
+            if (settings.get('membergroupcolor-design', false)) {
+                res.props.children.props.children = <div className="rolecolor-membergroup-inner">
+                    <span className="rolecolor-membergroup-name">{name}</span>
+                    <span className="rolecolor-membergroup-length">{length}</span>
+                </div>
+            }
+
+            const currentGuildId = getGuildId();
+            const guildRoles = Object.entries(getGuild(currentGuildId).roles);
+            let color;
+            try {
+                const [, role] = guildRoles.find(role => role[1]?.name === res.props['vz-role-name']);
+                color = role?.colorString
+            } catch (e) {}
+            res.props.style = {
+                ...res.props.style,
+                color,
+                "text-transform": settings.get('membergroupcolor-text-transform', "uppercase")
+            };
+            return res;
         });
     }
 }

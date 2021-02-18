@@ -24,3 +24,14 @@
         height: 14px !important;
     }
 }
+
+.rolecolor-membergroup-inner{
+    display: flex;
+    flex-direction: row;
+    align-items:flex-end;
+
+    .rolecolor-membergroup-length{
+        margin-left: auto;
+        font-size: 18px;
+    }
+}
