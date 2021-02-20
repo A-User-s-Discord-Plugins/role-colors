@@ -6,7 +6,7 @@ import { patch, unpatch } from '@vizality/patcher'
 import { Avatar } from '@vizality/components';
 import { findInReactTree } from '@vizality/util/react'
 import UserManager from "./apis/UserManager"
-import ColorManager from "./apis/ColorManager"
+import { shadeColor } from "@vizality/util/Color"
 
 const { getGuildId } = getModule('getGuildId');
 const { getGuild } = getModule('getGuild', 'getGuilds')
@@ -51,7 +51,7 @@ export default class Rolecolors extends Plugin {
             let originalColor = UserManager.getRoleColor(channel.guild_id, message.author.id)
             if (!originalColor) return res
 
-            let color = ColorManager.shadeColor(originalColor, settings.get('messagecolor-color-adjustment', -30))
+            let color = shadeColor(originalColor, (settings.get('messagecolor-color-adjustment', -30) / 100))
             res.props.style = {
                 ...res.props.style, // Don't overiide previous styles
                 color
@@ -97,7 +97,7 @@ export default class Rolecolors extends Plugin {
                 ...res.props.style, // Don't overiide previous styles
                 "--color": color,
                 "--colorBg": `${color}1a`,
-                "--colorBgHover": ColorManager.shadeColor(color, settings.get('mentioncolor-hover-adjustment', -20)) // i like readable mentions lmao
+                "--colorBgHover": shadeColor(color, (settings.get('mentioncolor-hover-adjustment', -20) / 100)) // i like readable mentions lmao
             }
 
             if (settings.get('mentioncolor-icons', false) && !(settings.get('mentioncolor-ignore-yourself', true) && getCurrentUser().id === user.id)) {
@@ -144,8 +144,6 @@ export default class Rolecolors extends Plugin {
         patch('rolecolor-lsi', ListSectionItem, 'default', function(args, res) {
             if (!settings.get('membergroupcolor', true)) return res
 
-            console.log(args, res)
-
             const name = args[0].children.props.children[0]
             const length = args[0].children.props.children[2]
 
@@ -159,9 +157,9 @@ export default class Rolecolors extends Plugin {
                 </div>
             }
 
-            const currentGuildId = getGuildId();
-            const guildRoles = Object.entries(getGuild(currentGuildId).roles);
-            let color;
+            const currentGuildId = getGuildId()
+            const guildRoles = Object.entries(getGuild(currentGuildId).roles)
+            let color
             try {
                 const [, role] = guildRoles.find(role => role[1]?.name === res.props['vz-role-name']);
                 color = role?.colorString
