@@ -12,7 +12,6 @@ const { getGuildId } = getModule('getGuildId');
 const { getGuild } = getModule('getGuild', 'getGuilds')
 const { membersGroup } = getModule('membersGroup');
 const { getChannel } = getModule('getChannel');
-const { getUserAvatarURL } = getModule('getUserAvatarURL');
 const UserStore = getModule('getUser', 'getUsers');
 const { getCurrentUser } = getModule('getCurrentUser');
 
@@ -104,7 +103,7 @@ export default class Rolecolors extends Plugin {
                 const text = settings.get('mentioncolor-@', true) ? res.props.children.props.children.substr(1) : res.props.children.props.children
 
                 res.props.children.props.children = <div className="rolecolors-mention-avatars">
-                    <Avatar src={getUserAvatarURL(user)} size={Avatar.Sizes.SIZE_16} />
+                    <Avatar src={getModule('getUserAvatarURL').getUserAvatarURL(user)} size={Avatar.Sizes.SIZE_16} />
                     {text}
                 </div>
             }
@@ -123,13 +122,15 @@ export default class Rolecolors extends Plugin {
                 .map(id => UserStore.getUser(id))
                 .filter(user => {
                     if (!user) return false
+                    if (user.id === getModule('getCurrentUser').getCurrentUser().id) return false
                     return true
                 });
 
-            if (!typingUsers) return res
+            const tree = res?.props?.children?.[1]?.props?.children
+            if (!typingUsers.length || !tree) return res
 
             for (let i = 0; i < typingUsers.length; i++) {
-                const childs = res.props.children[1].props.children[i * 2]
+                const childs = tree[i * 2]
                 if (!childs) break
                 console.log(childs, childs.props.children)
                 childs.props.children = <span style={{ color: UserManager.getRoleColor(this.props.guildId, typingUsers[i].id) }}>{childs.props.children}</span>
