@@ -2,7 +2,7 @@ import React from 'react'
 
 import { Plugin } from '@vizality/entities';
 import { getModule, getModuleByDisplayName } from '@vizality/webpack';
-import { patch, unpatch } from '@vizality/patcher'
+import { patch, unpatchAll } from '@vizality/patcher'
 import { Avatar } from '@vizality/components';
 import { findInReactTree } from '@vizality/util/react'
 import UserManager from "./apis/UserManager"
@@ -32,11 +32,7 @@ export default class Rolecolors extends Plugin {
     }
 
     stop(){
-        unpatch('rolecolor-mc')
-        unpatch('rolecolor-vc')
-        unpatch('rolecolor-mentions')
-        unpatch('rolecolor-tu')
-        unpatch('rolecolor-lsi')
+        unpatchAll()
     }
 
     patchMC(){
