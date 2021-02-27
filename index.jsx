@@ -31,9 +31,10 @@ export default class Rolecolors extends Plugin {
         this.patchTU()
         this.patchMentions()
         this.patchLSI()
+        this.patchUSP()
     }
 
-    consoleOnDeb(module, text, moduleColor) {
+    cslOnDeb(module, text, moduleColor) {
         if (!moduleColor) moduleColor = getRandomColor()
         if (this.settings.get('debug', true)) log({
             labels: [
@@ -141,8 +142,8 @@ export default class Rolecolors extends Plugin {
                 const childs = tree[i * 2]
                 if (!childs) break
                 let color = UserManager.getRoleColor(this.props.guildId, typingUsers[i].id)
-                _this.consoleOnDeb("TU", `${typingUsers[i].username} is typing `, "#dbd435")
-                _this.consoleOnDeb("TU", [`${typingUsers[i].username}'s color:'`, color], "#dbd435")
+                _this.cslOnDeb("TU", `${typingUsers[i].username} is typing `, "#dbd435")
+                _this.cslOnDeb("TU", [`${typingUsers[i].username}'s color:'`, color], "#dbd435")
                 childs.props.children = <span style={{ color }}>{childs.props.children}</span>
             }
 
@@ -186,5 +187,82 @@ export default class Rolecolors extends Plugin {
             };
             return res;
         });
+    }
+
+    patchUSP(){
+        let settings = this.settings
+        let _this = this
+
+        //uh this patching can yoink some react props, so this code restores the original props after getting it
+        const eyes = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher.current
+        const backupUseMemo = eyes.useMemo
+        const backupUseState = eyes.useState
+        const backupUseEffect = eyes.useEffect
+        const backupUseLayoutEffect = eyes.useLayoutEffect
+        const obackupUseRef = eyes.useRef
+
+        eyes.useMemo = (f) => f()
+        eyes.useState = (v) => [v, () => void 0]
+        eyes.useEffect = () => null
+        eyes.useLayoutEffect = () => null
+        eyes.useRef = () => ({})
+
+        const UserPopout = getModuleByDisplayName('ConnectedUserPopout')({ user: { isNonUserBot: () => void 0 } }).type
+
+        eyes.useMemo = backupUseMemo
+        eyes.useState = backupUseState
+        eyes.useEffect = backupUseEffect
+        eyes.useLayoutEffect = backupUseLayoutEffect
+        eyes.useRef = obackupUseRef
+
+
+
+        patch('rolecolor-usp', UserPopout.prototype, 'render', function (args, res) {
+            const activity = this.props.activity
+
+            const color = UserManager.getRoleColor(this.props.guildId, this.props.userId)
+
+            const realUserPopout = res.props.children
+            const header = realUserPopout.props.children[0]
+            _this.cslOnDeb("USP-Header", header)
+            if (!header) return res
+            
+            if (activity && settings.get('userpopoutcolor-activity', true) && !settings.get('userpopoutcolor-activity-spotify', false)) { // Check if there is any activities in the user. It also ignores if its an custom status
+                header.props.className += " rolecolor-userpopout-header"
+                if (settings.get('userpopoutcolor-activity-auto-colortext', true)) header.props.className += " rolecolor-userpopout-adaptive-text"
+                header.props.style = {
+                    ...header.props.style,
+                    "--bgColor": color,
+                    "--apropriatedColor": getContrastColor(color)
+                }
+            }
+            if (activity && settings.get('userpopoutcolor-ignore-activity', true)) return res
+
+            const headerText = header.props.children[0]?.props?.children[1]
+            _this.cslOnDeb("USP-HeaderText", headerText)
+            if (!headerText) return res
+
+            const headerName = headerText.props.children[0]
+            _this.cslOnDeb("USP-HeaderName", headerName)
+            if (headerName) {
+                headerName.props.className += " rolecolor-userpopout-text"
+                headerName.props.style = {
+                    ...headerName.props.style,
+                    color
+                }
+            }
+
+            const headerTag = headerText.props.children[1]?.props?.children
+            _this.cslOnDeb("USP-HeaderTag", headerTag)
+            if (headerTag) {
+                headerTag.props.className += " rolecolor-userpopout-text"
+                headerTag.props.style = {
+                    ...headerTag.props.style,
+                    color
+                }
+            }
+
+            return res
+        })
     }
 }

@@ -81,7 +81,7 @@ export default memo(({ getSetting, updateSetting, toggleSetting }) => {
                     }}
                 />}
                 <SwitchItem
-                    children='Auto change color text by checking if the role color is "too dark"'
+                    children='Adaptive text color'
                     note={[
                         "For example. it'll be hard ",
                         <span class="mention rolecolors-mention wrapper-3WhCwL mention interactive" tabindex="0" role="button" style={{
@@ -156,6 +156,67 @@ export default memo(({ getSetting, updateSetting, toggleSetting }) => {
                     }}
                 />
             </Category>}
+
+        <SwitchItem
+            children="Colored Members Group"
+            value={getSetting('userpopoutcolor', true)}
+            onChange={() => {
+                toggleSetting('userpopoutcolor')
+            }}
+        />
+
+        {getSetting('userpopoutcolor', true) &&
+            <Category
+                name="Advanced member group settings"
+                opened={getSetting('userpopoutcolor-advanced-settings', false)}
+                onChange={() => toggleSetting('userpopoutcolor-advanced-settings')}
+            >
+                <SwitchItem
+                    children="Colored Activities"
+                    note="Makes activities' background color colored"
+                    value={getSetting('userpopoutcolor-activity', true)}
+                    onChange={ e => {
+                        toggleSetting('userpopoutcolor-activity')
+                        if(e) updateSetting('userpopoutcolor-ignore-activity', true)
+                    }}
+                />
+
+                {getSetting('userpopoutcolor-activity', true) && <SwitchItem
+                    children="Change when spotify"
+                    note="Changes the background even if it is playing Spotify"
+                    value={!getSetting('userpopoutcolor-activity-spotify', false)}
+                    onChange={e => {
+                        toggleSetting('userpopoutcolor-activity-spotify')
+                    }}
+                />}
+
+                {getSetting('userpopoutcolor-activity', true) && <SwitchItem
+                    children="Adaptive text color"
+                    note="Changes text color to a dark scheme if the role is too bright"
+                    value={getSetting('userpopoutcolor-activity-auto-colortext', true)}
+                    onChange={e => {
+                        toggleSetting('userpopoutcolor-activity-auto-colortext')
+                    }}
+                />}
+                
+                <SwitchItem
+                    children="Don't change when having an activity"
+                    note="Ignores coloring if there is an activity playing"
+                    disabled={getSetting('userpopoutcolor-activity', true)}
+                    value={getSetting('userpopoutcolor-ignore-activity', true)}
+                    onChange={() => {
+                        toggleSetting('userpopoutcolor-ignore-activity')
+                    }}
+                />
+            </Category>}
+        
+        
+
+        {/* Advanced general Settings */}
+        <br />
+        <br />
+        <br />
+        <br />
         <Category
             name="Advanced general settings"
             description="Pretty advanced settings. I would say to not touch those if you REALLY know what you're doing"
