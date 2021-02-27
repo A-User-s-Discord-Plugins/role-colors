@@ -68,3 +68,27 @@
         }
     }
 }
+
+[vz-plugin="Rolecolors"] {
+    .vz-c-settings-category{
+        margin-bottom: 10px;
+    }
+}
+
+.rolecolor-onoff{
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-bottom: -4px;
+    margin-right: 10px;
+    border-radius: 50%;
+
+    transition: background .25s;
+
+    &[enabled="true"]{
+        background: #43b581;
+    }
+    &[enabled="false"]{
+        background: #f04747;
+    }
+}

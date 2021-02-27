@@ -227,7 +227,7 @@ export default class Rolecolors extends Plugin {
             _this.cslOnDeb("USP-Header", header)
             if (!header) return res
             
-            if (activity && settings.get('userpopoutcolor-activity', true) && !settings.get('userpopoutcolor-activity-spotify', false)) { // Check if there is any activities in the user. It also ignores if its an custom status
+            if (activity && settings.get('userpopoutcolor-activity', true) && !settings.get('userpopoutcolor-activity-spotify', false) && color) { // Check if there is any activities in the user. It also ignores if its an custom status
                 header.props.className += " rolecolor-userpopout-header"
                 if (settings.get('userpopoutcolor-activity-auto-colortext', true)) header.props.className += " rolecolor-userpopout-adaptive-text"
                 header.props.style = {
