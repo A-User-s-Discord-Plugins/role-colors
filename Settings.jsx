@@ -80,6 +80,23 @@ export default memo(({ getSetting, updateSetting, toggleSetting }) => {
                         toggleSetting('mentioncolor-ignore-yourself')
                     }}
                 />}
+                <SwitchItem
+                    children='Auto change color text by checking if the role color is "too dark"'
+                    note={[
+                        "For example. it'll be hard ",
+                        <span class="mention rolecolors-mention wrapper-3WhCwL mention interactive" tabindex="0" role="button" style={{
+                            "--color":"#faff00", "--colorBg":"#faff001a", "--colorBgHover":"#f8fc00", "--colorHover":"#fff",
+                        }}>to see this text in hover</span>,
+                        ", so this makes ",
+                        <span class="mention rolecolors-mention wrapper-3WhCwL mention interactive" tabindex="0" role="button" style={{
+                            "--color": "#ccff00", "--colorBg": "#ccff001a", "--colorBgHover": "#cafc00", "--colorHover": "#000",
+                        }}>mentions readable in that context</span>
+                    ]}
+                    value={getSetting('mentioncolor-auto-colortext', true)}
+                    onChange={() => {
+                        toggleSetting('mentioncolor-auto-colortext')
+                    }}
+                />
                 <SliderInput
                     asValueChanges={value => updateSetting('mentioncolor-hover-adjustment', Math.floor(value))}
                     initialValue={getSetting('mentioncolor-hover-adjustment', -20)}
@@ -139,5 +156,20 @@ export default memo(({ getSetting, updateSetting, toggleSetting }) => {
                     }}
                 />
             </Category>}
+        <Category
+            name="Advanced general settings"
+            description="Pretty advanced settings. I would say to not touch those if you REALLY know what you're doing"
+            opened={getSetting('general-advanced-settings', false)}
+            onChange={() => toggleSetting('general-advanced-settings')}
+        >
+            <SwitchItem
+                children="Debug"
+                note="pelo amor de Deus não trisque nesta opção"
+                value={getSetting('debug', false)}
+                onChange={() => {
+                    toggleSetting('debug')
+                }}
+            />
+        </Category>
     </>
 });

@@ -2,11 +2,13 @@ import React from 'react'
 
 import { Plugin } from '@vizality/entities';
 import { getModule, getModuleByDisplayName } from '@vizality/webpack';
-import { patch, unpatchAll } from '@vizality/patcher'
+import { patch } from '@vizality/patcher'
 import { Avatar } from '@vizality/components';
 import { findInReactTree } from '@vizality/util/react'
 import UserManager from "./apis/UserManager"
-import { shadeColor } from "@vizality/util/Color"
+import { shadeColor, getContrastColor, getRandomColor } from "@vizality/util/Color"
+import { log } from "@vizality/util/Logger"
+import { type } from '../eval-plugin/util/functions';
 
 const { getGuildId } = getModule('getGuildId');
 const { getGuild } = getModule('getGuild', 'getGuilds')
@@ -31,8 +33,15 @@ export default class Rolecolors extends Plugin {
         this.patchLSI()
     }
 
-    stop(){
-        unpatchAll()
+    consoleOnDeb(module, text, moduleColor) {
+        if (!moduleColor) moduleColor = getRandomColor()
+        if (this.settings.get('debug', true)) log({
+            labels: [
+                { text: 'Rolecolors', color: getRandomColor() },
+                { text: module, color: moduleColor }
+            ],
+            message: text
+        })
     }
 
     patchMC(){
@@ -87,12 +96,14 @@ export default class Rolecolors extends Plugin {
             let color = UserManager.getRoleColor(channel.guild_id, user.id)
             if (!color) return res
 
+
             res.props.children.props.className += " rolecolors-mention"
             res.props.children.props.style = {
                 ...res.props.style, // Don't overiide previous styles
                 "--color": color,
                 "--colorBg": `${color}1a`,
-                "--colorBgHover": shadeColor(color, (settings.get('mentioncolor-hover-adjustment', -20) / 100)) // i like readable mentions lmao
+                "--colorBgHover": shadeColor(color, (settings.get('mentioncolor-hover-adjustment', -20) / 100)), // i like readable mentions lmao
+                "--colorHover": settings.get('mentioncolor-auto-colortext', true) ? getContrastColor(color) : "#fff"
             }
 
             if (settings.get('mentioncolor-icons', false) && !(settings.get('mentioncolor-ignore-yourself', true) && getCurrentUser().id === user.id)) {
@@ -110,6 +121,7 @@ export default class Rolecolors extends Plugin {
 
     patchTU() {
         let settings = this.settings
+        const _this = this
         patch('rolecolor-tu', TypingUsers.prototype, 'render', function (args, res) {
             if (!settings.get('typingcolor', true)) return res
 
@@ -121,15 +133,17 @@ export default class Rolecolors extends Plugin {
                     if (user.id === getModule('getCurrentUser').getCurrentUser().id) return false
                     return true
                 });
-
+            
             const tree = res?.props?.children?.[1]?.props?.children
-            if (!typingUsers.length || !tree) return res
+            if (!typingUsers.length || !tree || typingUsers.length >= 4) return res
 
             for (let i = 0; i < typingUsers.length; i++) {
                 const childs = tree[i * 2]
                 if (!childs) break
-                console.log(childs, childs.props.children)
-                childs.props.children = <span style={{ color: UserManager.getRoleColor(this.props.guildId, typingUsers[i].id) }}>{childs.props.children}</span>
+                let color = UserManager.getRoleColor(this.props.guildId, typingUsers[i].id)
+                _this.consoleOnDeb("TU", `${typingUsers[i].username} is typing `, "#dbd435")
+                _this.consoleOnDeb("TU", [`${typingUsers[i].username}'s color:'`, color], "#dbd435")
+                childs.props.children = <span style={{ color }}>{childs.props.children}</span>
             }
 
             return res
@@ -138,11 +152,14 @@ export default class Rolecolors extends Plugin {
 
     patchLSI() {
         let settings = this.settings
+        const _this = this
         patch('rolecolor-lsi', ListSectionItem, 'default', function(args, res) {
             if (!settings.get('membergroupcolor', true)) return res
 
-            const name = args[0].children.props.children[0]
-            const length = args[0].children.props.children[2]
+            const name = args[0]?.children?.props?.children[0]
+            const length = args[0]?.children?.props?.children[2]
+
+            if(!name || !length) return res
 
             //thanks dperolio
             if (!res.props?.children?.props?.children || !res.props?.className?.includes("membersGroup-v9BXpm")) return res;
@@ -161,6 +178,7 @@ export default class Rolecolors extends Plugin {
                 const [, role] = guildRoles.find(role => role[1]?.name === res.props['vz-role-name']);
                 color = role?.colorString
             } catch (e) {}
+
             res.props.style = {
                 ...res.props.style,
                 color,
