@@ -182,13 +182,6 @@ export default class Settings extends React.PureComponent {
                 opened={this.props.getSetting('userpopoutcolor-settings', false)}
                 onChange={(e) => this.props.toggleSetting('userpopoutcolor-settings')}
             >
-                <SwitchItem
-                    children="Enabled"
-                    value={this.props.getSetting('userpopoutcolor', true)}
-                    onChange={() => {
-                        this.props.toggleSetting('userpopoutcolor')
-                    }}
-                />
                 {this.props.getSetting('userpopoutcolor', true) && <>
                     <SwitchItem
                         children="Colored Activities"
@@ -200,10 +193,30 @@ export default class Settings extends React.PureComponent {
                         }}
                     />
 
+                    <RadioGroup
+                        options={[
+                            { name: "Background", value: true },
+                            { name: "Text", value: false }
+                        ]}
+                        value={this.props.getSetting('userpopoutcolor-activity', true)}
+                        onChange={e => {
+                            this.props.updateSetting('userpopoutcolor-activity', e.value)
+                            if (e) this.props.updateSetting('userpopoutcolor-ignore-activity', true)
+                        }}
+                    > Type of color display </RadioGroup>
+
                     {this.props.getSetting('userpopoutcolor-activity', true) && <>
                         <SwitchItem
-                            children="Change when spotify"
-                            note="Changes the background even if it is playing Spotify"
+                            children="Change color no matter what"
+                            note="Changes the background even if it is not playing an activity"
+                            value={this.props.getSetting('userpopoutcolor-activity-always', false)}
+                            onChange={e => {
+                                this.props.toggleSetting('userpopoutcolor-activity-always')
+                            }}
+                        />
+                        <SwitchItem
+                            children="Change when playing activity"
+                            note="Changes the background even if it is playing a game or listening to Spotify"
                             value={!this.props.getSetting('userpopoutcolor-activity-spotify', false)}
                             onChange={e => {
                                 this.props.toggleSetting('userpopoutcolor-activity-spotify')
@@ -220,7 +233,7 @@ export default class Settings extends React.PureComponent {
                     </>}
 
                     <SwitchItem
-                        children="Don't change when having an activity"
+                        children="Ignore change when having an activity"
                         note="Ignores coloring if there is an activity playing"
                         disabled={this.props.getSetting('userpopoutcolor-activity', true)}
                         value={this.props.getSetting('userpopoutcolor-ignore-activity', true)}
