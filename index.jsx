@@ -227,7 +227,7 @@ export default class Rolecolors extends Plugin {
             _this.cslOnDeb("USP-Header", header)
             if (!header) return res
             
-            if ((activity || settings.get('userpopoutcolor-activity-always', false)) && settings.get('userpopoutcolor-activity', true) && !settings.get('userpopoutcolor-activity-spotify', false) && color) { // Check if there is any activities in the user. It also ignores if its an custom status
+            if (settings.get('userpopoutcolor-activity', true) && (activity || settings.get('userpopoutcolor-activity-always', false)) && !settings.get('userpopoutcolor-activity-spotify', false) && color) { // Check if there is any activities in the user. It also ignores if its an custom status
                 header.props.className += " rolecolor-userpopout-header"
                 if (settings.get('userpopoutcolor-activity-auto-colortext', true)) header.props.className += " rolecolor-userpopout-adaptive-text"
                 header.props.style = {
@@ -235,30 +235,29 @@ export default class Rolecolors extends Plugin {
                     "--bgColor": color,
                     "--apropriatedColor": getContrastColor(color)
                 }
-            }
-            if (activity && settings.get('userpopoutcolor-ignore-activity', true)) return res
+            } else if (!settings.get('userpopoutcolor-ignore-activity', true)) {
+                const headerText = header.props.children[0]?.props?.children[1]
+                _this.cslOnDeb("USP-HeaderText", headerText)
+                if (!headerText) return res
 
-            const headerText = header.props.children[0]?.props?.children[1]
-            _this.cslOnDeb("USP-HeaderText", headerText)
-            if (!headerText) return res
-
-            const headerName = headerText.props.children[0]
-            _this.cslOnDeb("USP-HeaderName", headerName)
-            if (headerName) {
-                headerName.props.className += " rolecolor-userpopout-text"
-                headerName.props.style = {
-                    ...headerName.props.style,
-                    color
+                const headerName = headerText.props.children[0]
+                _this.cslOnDeb("USP-HeaderName", headerName)
+                if (headerName) {
+                    headerName.props.className += " rolecolor-userpopout-text"
+                    headerName.props.style = {
+                        ...headerName.props.style,
+                        color
+                    }
                 }
-            }
 
-            const headerTag = headerText.props.children[1]?.props?.children
-            _this.cslOnDeb("USP-HeaderTag", headerTag)
-            if (headerTag) {
-                headerTag.props.className += " rolecolor-userpopout-text"
-                headerTag.props.style = {
-                    ...headerTag.props.style,
-                    color
+                const headerTag = headerText.props.children[1]?.props?.children
+                _this.cslOnDeb("USP-HeaderTag", headerTag)
+                if (headerTag) {
+                    headerTag.props.className += " rolecolor-userpopout-text"
+                    headerTag.props.style = {
+                        ...headerTag.props.style,
+                        color
+                    }
                 }
             }
 
