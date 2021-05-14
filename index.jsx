@@ -4,11 +4,9 @@ import { Plugin } from '@vizality/entities';
 import { getModule, getModuleByDisplayName } from '@vizality/webpack';
 import { patch } from '@vizality/patcher'
 import { Avatar } from '@vizality/components';
-import { findInReactTree } from '@vizality/util/react'
 import UserManager from "./apis/UserManager"
 import { shadeColor, getContrastColor, getRandomColor } from "@vizality/util/Color"
 import { log } from "@vizality/util/Logger"
-import { type } from '../eval-plugin/util/functions';
 
 const { getGuildId } = getModule('getGuildId');
 const { getGuild } = getModule('getGuild', 'getGuilds')
@@ -48,7 +46,7 @@ export default class Rolecolors extends Plugin {
     patchMC(){
         let settings = this.settings
         patch('rolecolor-mc', MessageContent, 'type', function (args, res) {
-            if (!settings.get('messagecolor', true)) return res
+            if (!settings.get('messagecolor', false)) return res
 
             let message = args[0].message
 
@@ -68,45 +66,38 @@ export default class Rolecolors extends Plugin {
 
     patchVC(){
         let settings = this.settings
+        const _this = this
         patch('rolecolor-vc', VoiceUser.prototype, 'render', function (args, res) {
-            if (!settings.get('voicecolor', true)) return res
+            if (!settings.get('voicecolor', false)) return res
+
+            // _this.cslOnDeb("VC", res.props.children)
 
             const { user } = this.props
-            
-            let color = UserManager.getRoleColor(getGuildId(), user.id)
-            
-            const text = res.props.children.props.children[2]
+            const color = UserManager.getRoleColor(getGuildId(), user.id)
+            const container = res.props.children.props
+            _this.cslOnDeb("VC", container)
 
-            text.props.className += " rolecolors-vc"
-            text.props.style = {
-                ...res.props.style, // Don't overiide previous styles
-                color
+            container.style = {
+                ...container.style, // Don't overiide previous styles
+                "--color": color
             }
-            return res
+
+            if (!settings.get('voicecolor-text', true)) container.className += " rolecolors-vc-text"
+
+            if (!settings.get('voicecolor-ring', true)) container.className += " rolecolors-vc-ring"
         });
     }
 
     patchMentions() {
         let settings = this.settings
         patch('rolecolor-mentions', UserMention, 'default', function (args, res) {
-            if (!settings.get('mentioncolor', true)) return res
+            if (!settings.get('mentioncolor', false)) return res
 
             const channel = getChannel(args[0].channelId);
             const user = UserStore.getUser(args[0].userId)
 
             let color = UserManager.getRoleColor(channel.guild_id, user.id)
-            if (!color) return res
-
-
-            res.props.children.props.className += " rolecolors-mention"
-            res.props.children.props.style = {
-                ...res.props.style, // Don't overiide previous styles
-                "--color": color,
-                "--colorBg": `${color}1a`,
-                "--colorBgHover": shadeColor(color, (settings.get('mentioncolor-hover-adjustment', -20) / 100)), // i like readable mentions lmao
-                "--colorHover": settings.get('mentioncolor-auto-colortext', true) ? getContrastColor(color) : "#fff"
-            }
-
+            
             if (settings.get('mentioncolor-icons', false) && !(settings.get('mentioncolor-ignore-yourself', true) && getCurrentUser().id === user.id)) {
                 const text = settings.get('mentioncolor-@', true) ? res.props.children.props.children.substr(1) : res.props.children.props.children
 
@@ -114,6 +105,17 @@ export default class Rolecolors extends Plugin {
                     <Avatar src={getModule('getUserAvatarURL').getUserAvatarURL(user)} size={Avatar.Sizes.SIZE_16} />
                     {text}
                 </div>
+            }
+
+            if (!color) return res
+            res.props.children.props.className += " rolecolors-mention"
+
+            res.props.children.props.style = {
+                ...res.props.children.props.style, // Don't overiide previous styles
+                "--color": color,
+                "--colorBg": `${color}1a`,
+                "--colorBgHover": shadeColor(color, (settings.get('mentioncolor-hover-adjustment', -20) / 100)), // i like readable mentions lmao
+                "--colorHover": settings.get('mentioncolor-auto-colortext', true) ? getContrastColor(color) : "#fff"
             }
 
             return res
@@ -124,7 +126,7 @@ export default class Rolecolors extends Plugin {
         let settings = this.settings
         const _this = this
         patch('rolecolor-tu', TypingUsers.prototype, 'render', function (args, res) {
-            if (!settings.get('typingcolor', true)) return res
+            if (!settings.get('typingcolor', false)) return res
 
             //stolen from strencher btw, also credits https://github.com/shitcord-plugins/typing-avatars/blob/master/index.jsx
             const typingUsers = Object.keys(this.props.typingUsers || {})
@@ -155,7 +157,7 @@ export default class Rolecolors extends Plugin {
         let settings = this.settings
         const _this = this
         patch('rolecolor-lsi', ListSectionItem, 'default', function(args, res) {
-            if (!settings.get('membergroupcolor', true)) return res
+            if (!settings.get('membergroupcolor', false)) return res
 
             const name = args[0]?.children?.props?.children[0]
             const length = args[0]?.children?.props?.children[2]
@@ -171,9 +173,7 @@ export default class Rolecolors extends Plugin {
                     <span className="rolecolor-membergroup-length">{length}</span>
                 </div>
             }
-
-            const currentGuildId = getGuildId()
-            const guildRoles = Object.entries(getGuild(currentGuildId).roles)
+            const guildRoles = Object.entries(getGuild(getGuildId()).roles)
             let color
             try {
                 const [, role] = guildRoles.find(role => role[1]?.name === res.props['vz-role-name']);
@@ -218,6 +218,7 @@ export default class Rolecolors extends Plugin {
 
 
         patch('rolecolor-usp', UserPopout.prototype, 'render', function (args, res) {
+            if (settings.get('userpopoutcolor', false)) return res
             const activity = this.props.activity
 
             const color = UserManager.getRoleColor(this.props.guildId, this.props.userId)

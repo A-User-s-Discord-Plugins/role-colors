@@ -1,15 +1,26 @@
-.rolecolors-vc.usernameSpeaking-RmltQx{
-    font-weight: 600;
+.content-1Wq3SX{
+    &.rolecolors-vc-text .username-3KYl0N{
+        color: var(--color);
+
+        &.usernameSpeaking-RmltQx {
+            font-weight: 600;
+        }
+    }
+
+    &.rolecolors-vc-ring .avatarSpeaking-2IGMRN{
+        box-shadow: inset 0 0 0 2px var(--color),inset 0 0 0 3px var(--background-secondary);
+    }
 }
 
-.rolecolors-mention{
+
+:root .rolecolors-mention{
     color: var(--color);
-    background-color: var(--colorBg)
-}
+    background-color: var(--colorBg);
 
-.rolecolors-mention:hover{
-    color: var(--colorHover);
-    background-color: var(--colorBgHover)
+    &:hover{
+        color: var(--colorHover);
+        background-color: var(--colorBgHover)
+    }
 }
 
 .rolecolors-mention-avatars{

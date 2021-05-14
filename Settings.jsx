@@ -52,6 +52,27 @@ export default class Settings extends React.PureComponent {
                         this.props.toggleSetting('voicecolor')
                     }}
                 />
+
+                {this.props.getSetting('voicecolor', true) && <>
+                    <SwitchItem
+                        children="Text Colored"
+                        note="Colors text"
+                        value={!this.props.getSetting('voicecolor-text', true)}
+                        onChange={() => {
+                            console.log(this.props.getSetting('voicecolor-text'))
+                            this.props.toggleSetting('voicecolor-text')
+                        }}
+                    />
+                    <SwitchItem
+                        children="Ring Colored"
+                        note="Colors the speaking ring"
+                        value={!this.props.getSetting('voicecolor-ring', true)}
+                        onChange={() => {
+                            console.log(this.props.getSetting('voicecolor-ring'))
+                            this.props.toggleSetting('voicecolor-ring')
+                        }}
+                    />
+                </>}
             </Category>
 
             <Category
