@@ -206,6 +206,12 @@ export default class Rolecolors extends Plugin {
   patchUSP () {
     const { settings } = this;
 
+    // User Popout
+    patch(getModule(m => m?.default?.displayName === 'ConnectedUserPopout'), 'default', (args, res) => {
+      res.props.user.GuildId = args[0].guildId;
+      return res;
+    });
+
     // Info
     patch(getModule(m => m?.default?.displayName === 'DiscordTag'), 'default', (args, res) => {
       res.props.guildId = args[0].user.GuildId;
