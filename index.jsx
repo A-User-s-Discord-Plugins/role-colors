@@ -207,19 +207,19 @@ export default class Rolecolors extends Plugin {
     const { settings } = this;
 
     // Info
-    patch(getModule(m => m?.default?.displayName === 'DiscordTag'), 'default', (args, res) => {
-      res.props.guildId = args[0].user.GuildId;
+    patch(getModule(m => m.default?.displayName === 'DiscordTag'), 'default', (args, res) => {
       res.props.userId = args[0].user.id;
       return res;
     });
 
     // User Popout Nickname
-    patch(getModule(m => m?.default?.displayName === 'UserPopoutInfo'), 'default', (args, res) => {
+    patch(getModule(m => m.UserPopoutInfo), 'UserPopoutInfo', (args, res) => {
       if (settings.get('userpopoutcolor', false)) return res;
 
-      const { GuildId, id: userId } = args[0].user;
+      const { id: userId } = args[0].user;
 
-      const color = UserManager.getRoleColor(GuildId, userId);
+      const color = UserManager.getRoleColor(getGuildId(), userId);
+      if (!color) return res;
 
       if (!settings.get('userpopoutcolor-ignore-activity', true)) {
         const nickname = res.props.children[1].props.children[0];
@@ -230,12 +230,13 @@ export default class Rolecolors extends Plugin {
     });
 
     // User Popout Name & Discriminator
-    patch(getModule(m => m?.default?.displayName === 'NameTag'), 'default', (args, res) => {
+    patch(getModule(m => m.default?.displayName === 'NameTag'), 'default', (args, res) => {
       if (settings.get('userpopoutcolor', false)) return res;
 
-      const { guildId, userId } = args[0];
+      const { userId } = args[0];
 
-      const color = UserManager.getRoleColor(guildId, userId);
+      const color = UserManager.getRoleColor(getGuildId(), userId);
+      if (!color) return res;
 
       if (!settings.get('userpopoutcolor-ignore-activity', true)) {
         res.props.children[0].props.style = { ...res.props.children[0].props.style, color };
