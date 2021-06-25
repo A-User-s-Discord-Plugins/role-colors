@@ -207,13 +207,13 @@ export default class Rolecolors extends Plugin {
     const { settings } = this;
 
     // Info
-    patch(getModule(m => m?.default?.displayName === 'DiscordTag'), 'default', (args, res) => {
+    patch(getModule(m => m.default?.displayName === 'DiscordTag'), 'default', (args, res) => {
       res.props.userId = args[0].user.id;
       return res;
     });
 
     // User Popout Nickname
-    patch(getModule(m => m?.default?.displayName === 'UserPopoutInfo'), 'default', (args, res) => {
+    patch(getModule(m => m.UserPopoutInfo), 'UserPopoutInfo', (args, res) => {
       if (settings.get('userpopoutcolor', false)) return res;
 
       const { id: userId } = args[0].user;
@@ -230,7 +230,7 @@ export default class Rolecolors extends Plugin {
     });
 
     // User Popout Name & Discriminator
-    patch(getModule(m => m?.default?.displayName === 'NameTag'), 'default', (args, res) => {
+    patch(getModule(m => m.default?.displayName === 'NameTag'), 'default', (args, res) => {
       if (settings.get('userpopoutcolor', false)) return res;
 
       const { userId } = args[0];
